@@ -1,28 +1,51 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useState } from 'react';
+import 'react-native-gesture-handler';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { TouchableOpacity, Text } from 'react-native';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import HomeScreen from './src/screens/HomeScreen';
+import FavoritesScreen from './src/screens/FavoritesScreen';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+const Stack = createStackNavigator();
+
+const App = () => {
+  const [favorites, setFavorites] = useState([]);
+
+  const handleAddToFavorites = (book) => {
+    if (!favorites.some(fav => fav.title === book.title)) {
+      setFavorites(currentFavorites => [...currentFavorites, book]);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <NewAppScreen templateFileName="App.tsx" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Home"
+          options={({ navigation }) => ({
+            title: '本を探す',
+            headerRight: () => (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Favorites')}
+                style={{ marginRight: 15 }}
+              >
+                <Text style={{ color: '#007AFF', fontSize: 16 }}>お気に入り</Text>
+              </TouchableOpacity>
+            ),
+          })}
+        >
+          {props => <HomeScreen {...props} onAddToFavorites={handleAddToFavorites} />}
+        </Stack.Screen>
+        <Stack.Screen
+          name="Favorites"
+          options={{ title: 'お気に入り一覧' }}
+        >
+          {props => <FavoritesScreen {...props} favorites={favorites} />}
+        </Stack.Screen>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
+};
 
 export default App;
