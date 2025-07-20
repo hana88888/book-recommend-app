@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, Image, ActivityIndicator } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
-import { RAKUTEN_APP_ID } from '@env';
+import Config from 'react-native-config';
+
+const RAKUTEN_APP_ID = Config.RAKUTEN_APP_ID; // ★★★ 変更点② ★★★
 
 const BookCard = ({ card }) => (
   <View style={styles.card}>
