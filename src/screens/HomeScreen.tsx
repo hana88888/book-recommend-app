@@ -1,75 +1,4 @@
-import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, Image, ActivityIndicator } from 'react-native';
-import Swiper from 'react-native-deck-swiper';
-import Config from 'react-native-config';
-
-const RAKUTEN_APP_ID = Config.RAKUTEN_APP_ID; // ★★★ 変更点② ★★★
-
-const BookCard = ({ card }) => (
-  <View style={styles.card}>
-    <Image source={{ uri: card.coverImageUrl }} style={styles.coverImage} />
-    <Text style={styles.title} numberOfLines={2}>{card.title}</Text>
-    <Text style={styles.author}>{card.author}</Text>
-  </View>
-);
-
-const HomeScreen = ({ onAddToFavorites }) => {
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const response = await fetch(`https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?format=json&applicationId=${RAKUTEN_APP_ID}&booksGenreId=001005`);
-        const data = await response.json();
-        if (data.Items) {
-          const formattedBooks = data.Items.map(item => ({
-            title: item.Item.title,
-            author: item.Item.author,
-            coverImageUrl: item.Item.largeImageUrl.replace('?_ex=120x120', ''),
-          }));
-          setBooks(formattedBooks);
-        } else {
-          console.log("APIから本のデータが取得できませんでした:", data);
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBooks();
-  }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <Text>本を探しています...</Text>
-      </View>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.swiperContainer}>
-        <Swiper
-          cards={books}
-          renderCard={(card) => (card ? <BookCard card={card} /> : null)}
-          onSwipedRight={(cardIndex) => {
-            onAddToFavorites(books[cardIndex]);
-          }}
-          cardIndex={0}
-          backgroundColor={'transparent'}
-          stackSize={3}
-          infinite
-          animateCardOpacity
-        />
-      </View>
-    </SafeAreaView>
-  );
-};
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -113,5 +42,4 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
 });
-
 export default HomeScreen;
