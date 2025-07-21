@@ -3,6 +3,19 @@ import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, ActivityIndicato
 import { getUserId } from '../utils/userUtils';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_AUTH = process.env.EXPO_PUBLIC_BACKEND_AUTH;
+
+const getAuthHeaders = (): HeadersInit => {
+  if (BACKEND_AUTH) {
+    return {
+      'Authorization': `Basic ${btoa(BACKEND_AUTH)}`,
+      'Content-Type': 'application/json',
+    };
+  }
+  return {
+    'Content-Type': 'application/json',
+  };
+};
 
 interface Book {
   title: string;
@@ -20,7 +33,9 @@ const FavoritesScreen = () => {
       try {
         setLoading(true);
         const userId = await getUserId();
-        const response = await fetch(`${BACKEND_URL}/favorites/${userId}`);
+        const response = await fetch(`${BACKEND_URL}/favorites/${userId}`, {
+          headers: getAuthHeaders(),
+        });
         
         if (response.ok) {
           const data = await response.json();

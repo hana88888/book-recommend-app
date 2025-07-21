@@ -5,26 +5,21 @@ import { getUserId } from '../utils/userUtils';
 
 const RAKUTEN_APP_ID = process.env.EXPO_PUBLIC_RAKUTEN_APP_ID;
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const BACKEND_AUTH = process.env.EXPO_PUBLIC_BACKEND_AUTH;
+
+const getAuthHeaders = (): HeadersInit => {
+  if (BACKEND_AUTH) {
+    return {
+      'Authorization': `Basic ${btoa(BACKEND_AUTH)}`,
+      'Content-Type': 'application/json',
+    };
+  }
+  return {
+    'Content-Type': 'application/json',
+  };
+};
 
 const BookCard = ({ card, onLike, onDislike, isWeb }) => {
-  if (isWeb) {
-    return (
-      <View style={styles.card}>
-        <Image source={{ uri: card.coverImageUrl }} style={styles.coverImage} />
-        <Text style={styles.title} numberOfLines={2}>{card.title}</Text>
-        <Text style={styles.author}>{card.author}</Text>
-        <View style={styles.webButtonContainer}>
-          <TouchableOpacity style={[styles.webButton, styles.dislikeButton]} onPress={onDislike}>
-            <Text style={styles.buttonText}>👎 パス</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.webButton, styles.likeButton]} onPress={onLike}>
-            <Text style={styles.buttonText}>👍 いいね</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-  
   return (
     <View style={styles.card}>
       <Image source={{ uri: card.coverImageUrl }} style={styles.coverImage} />
@@ -73,9 +68,7 @@ const HomeScreen = () => {
       
       const response = await fetch(`${BACKEND_URL}/swipe`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           user_id: userId,
           book_isbn: book.isbn,
@@ -126,12 +119,35 @@ const HomeScreen = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.swiperContainer}>
           {currentCardIndex < books.length ? (
-            <BookCard 
-              card={books[currentCardIndex]} 
-              onLike={handleWebLike}
-              onDislike={handleWebDislike}
-              isWeb={true}
-            />
+            <View style={styles.webContainer}>
+              <Swiper
+                cards={books.slice(currentCardIndex)}
+                renderCard={(card) => (card ? <BookCard card={card} isWeb={false} onLike={() => {}} onDislike={() => {}} /> : null)}
+                onSwipedRight={(cardIndex) => {
+                  const actualIndex = currentCardIndex + cardIndex;
+                  recordSwipe(books[actualIndex], true);
+                  setCurrentCardIndex(actualIndex + 1);
+                }}
+                onSwipedLeft={(cardIndex) => {
+                  const actualIndex = currentCardIndex + cardIndex;
+                  recordSwipe(books[actualIndex], false);
+                  setCurrentCardIndex(actualIndex + 1);
+                }}
+                cardIndex={0}
+                backgroundColor={'transparent'}
+                stackSize={3}
+                infinite={false}
+                animateCardOpacity
+              />
+              <View style={styles.webButtonOverlay}>
+                <TouchableOpacity style={[styles.webButton, styles.dislikeButton]} onPress={handleWebDislike}>
+                  <Text style={styles.buttonText}>👎 パス</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.webButton, styles.likeButton]} onPress={handleWebLike}>
+                  <Text style={styles.buttonText}>👍 いいね</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           ) : (
             <View style={styles.noMoreCards}>
               <Text style={styles.noMoreCardsText}>すべての本を確認しました！</Text>
@@ -207,11 +223,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666666',
   },
-  webButtonContainer: {
+  webContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  webButtonOverlay: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 40,
   },
   webButton: {
     paddingVertical: 12,
