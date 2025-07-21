@@ -15,7 +15,7 @@ const BookCard = ({ card }) => (
   </View>
 );
 
-const HomeScreen = ({ onAddToFavorites }) => {
+const HomeScreen = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -83,7 +83,6 @@ const HomeScreen = ({ onAddToFavorites }) => {
           cards={books}
           renderCard={(card) => (card ? <BookCard card={card} /> : null)}
           onSwipedRight={(cardIndex) => {
-            onAddToFavorites(books[cardIndex]);
             recordSwipe(books[cardIndex], true);
           }}
           onSwipedLeft={(cardIndex) => {

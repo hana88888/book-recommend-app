@@ -1,7 +1,64 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, ActivityIndicator } from 'react-native';
+import { getUserId } from '../utils/userUtils';
+import Config from 'react-native-config';
 
-const FavoritesScreen = ({ favorites }) => {
+const BACKEND_URL = Config.BACKEND_URL || 'http://localhost:8000';
+
+interface Book {
+  title: string;
+  author: string;
+  largeImageUrl: string;
+  isbn: string;
+}
+
+const FavoritesScreen = () => {
+  const [favorites, setFavorites] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        setLoading(true);
+        const userId = await getUserId();
+        const response = await fetch(`${BACKEND_URL}/favorites/${userId}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const books = data.Items || [];
+          const formattedBooks = books.map((item: any) => ({
+            title: item.title,
+            author: item.author,
+            largeImageUrl: item.largeImageUrl,
+            isbn: item.isbn
+          }));
+          setFavorites(formattedBooks);
+        } else {
+          console.error('Failed to fetch favorites');
+          setFavorites([]);
+        }
+      } catch (error) {
+        console.error('Error fetching favorites:', error);
+        setFavorites([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFavorites();
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>お気に入りを読み込み中...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -9,7 +66,7 @@ const FavoritesScreen = ({ favorites }) => {
         keyExtractor={(item, index) => `${item.title}-${index}`}
         renderItem={({ item }) => (
           <View style={styles.bookItem}>
-            <Image source={{ uri: item.coverImageUrl }} style={styles.coverImage} />
+            <Image source={{ uri: item.largeImageUrl }} style={styles.coverImage} />
             <View style={styles.bookInfo}>
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.author}>{item.author}</Text>
@@ -30,6 +87,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666666',
   },
   emptyContainer: {
     flex: 1,
