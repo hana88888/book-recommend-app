@@ -1,22 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, Image, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, Image, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { getUserId } from '../utils/userUtils';
 
 const RAKUTEN_APP_ID = process.env.EXPO_PUBLIC_RAKUTEN_APP_ID;
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
-const BookCard = ({ card }) => (
-  <View style={styles.card}>
-    <Image source={{ uri: card.coverImageUrl }} style={styles.coverImage} />
-    <Text style={styles.title} numberOfLines={2}>{card.title}</Text>
-    <Text style={styles.author}>{card.author}</Text>
-  </View>
-);
+const BookCard = ({ card, onLike, onDislike, isWeb }) => {
+  if (isWeb) {
+    return (
+      <View style={styles.card}>
+        <Image source={{ uri: card.coverImageUrl }} style={styles.coverImage} />
+        <Text style={styles.title} numberOfLines={2}>{card.title}</Text>
+        <Text style={styles.author}>{card.author}</Text>
+        <View style={styles.webButtonContainer}>
+          <TouchableOpacity style={[styles.webButton, styles.dislikeButton]} onPress={onDislike}>
+            <Text style={styles.buttonText}>👎 パス</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.webButton, styles.likeButton]} onPress={onLike}>
+            <Text style={styles.buttonText}>👍 いいね</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+  
+  return (
+    <View style={styles.card}>
+      <Image source={{ uri: card.coverImageUrl }} style={styles.coverImage} />
+      <Text style={styles.title} numberOfLines={2}>{card.title}</Text>
+      <Text style={styles.author}>{card.author}</Text>
+    </View>
+  );
+};
 
 const HomeScreen = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const isWeb = Platform.OS === 'web';
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -45,7 +67,10 @@ const HomeScreen = () => {
 
   const recordSwipe = async (book, liked) => {
     try {
+      console.log('🔄 Recording swipe:', { book: book.title, liked });
       const userId = await getUserId();
+      console.log('👤 User ID:', userId);
+      
       const response = await fetch(`${BACKEND_URL}/swipe`, {
         method: 'POST',
         headers: {
@@ -60,11 +85,30 @@ const HomeScreen = () => {
           cover_image_url: book.coverImageUrl,
         }),
       });
+      
       if (!response.ok) {
-        console.error('Failed to record swipe:', response.status);
+        console.error('❌ Failed to record swipe:', response.status);
+      } else {
+        console.log('✅ Swipe recorded successfully');
       }
     } catch (error) {
-      console.error('Error recording swipe:', error);
+      console.error('🚨 Error recording swipe:', error);
+    }
+  };
+
+  const handleWebLike = () => {
+    if (currentCardIndex < books.length) {
+      const currentBook = books[currentCardIndex];
+      recordSwipe(currentBook, true);
+      setCurrentCardIndex(currentCardIndex + 1);
+    }
+  };
+
+  const handleWebDislike = () => {
+    if (currentCardIndex < books.length) {
+      const currentBook = books[currentCardIndex];
+      recordSwipe(currentBook, false);
+      setCurrentCardIndex(currentCardIndex + 1);
     }
   };
 
@@ -77,12 +121,34 @@ const HomeScreen = () => {
     );
   }
 
+  if (isWeb) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.swiperContainer}>
+          {currentCardIndex < books.length ? (
+            <BookCard 
+              card={books[currentCardIndex]} 
+              onLike={handleWebLike}
+              onDislike={handleWebDislike}
+              isWeb={true}
+            />
+          ) : (
+            <View style={styles.noMoreCards}>
+              <Text style={styles.noMoreCardsText}>すべての本を確認しました！</Text>
+              <Text style={styles.noMoreCardsSubtext}>お気に入りページで選んだ本を確認できます</Text>
+            </View>
+          )}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.swiperContainer}>
         <Swiper
           cards={books}
-          renderCard={(card) => (card ? <BookCard card={card} /> : null)}
+          renderCard={(card) => (card ? <BookCard card={card} isWeb={false} onLike={() => {}} onDislike={() => {}} /> : null)}
           onSwipedRight={(cardIndex) => {
             recordSwipe(books[cardIndex], true);
           }}
@@ -140,6 +206,47 @@ const styles = StyleSheet.create({
   author: {
     fontSize: 16,
     color: '#666666',
+  },
+  webButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  webButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  likeButton: {
+    backgroundColor: '#4CAF50',
+  },
+  dislikeButton: {
+    backgroundColor: '#f44336',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  noMoreCards: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  noMoreCardsText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  noMoreCardsSubtext: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
   },
 });
 
