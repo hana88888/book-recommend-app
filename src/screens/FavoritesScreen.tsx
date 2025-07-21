@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, ActivityIndicator, ScrollView } from 'react-native';
 import { getUserId } from '../utils/userUtils';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -22,6 +22,7 @@ interface Book {
   author: string;
   largeImageUrl: string;
   isbn: string;
+  summary?: string;
 }
 
 const FavoritesScreen = () => {
@@ -44,7 +45,8 @@ const FavoritesScreen = () => {
             title: item.title,
             author: item.author,
             largeImageUrl: item.largeImageUrl,
-            isbn: item.isbn
+            isbn: item.isbn,
+            summary: item.summary || ''
           }));
           setFavorites(formattedBooks);
         } else {
@@ -84,6 +86,11 @@ const FavoritesScreen = () => {
             <View style={styles.bookInfo}>
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.author}>{item.author}</Text>
+              {item.summary && (
+                <ScrollView style={styles.summaryContainer} showsVerticalScrollIndicator={true}>
+                  <Text style={styles.summary}>{item.summary}</Text>
+                </ScrollView>
+              )}
             </View>
           </View>
         )}
@@ -141,6 +148,16 @@ const styles = StyleSheet.create({
   author: {
     fontSize: 14,
     color: '#666666',
+    marginBottom: 8,
+  },
+  summaryContainer: {
+    maxHeight: 60,
+    marginTop: 5,
+  },
+  summary: {
+    fontSize: 12,
+    color: '#333333',
+    lineHeight: 16,
   },
 });
 

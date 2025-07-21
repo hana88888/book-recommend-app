@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, Image, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, Image, ActivityIndicator, TouchableOpacity, Platform, ScrollView } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { getUserId } from '../utils/userUtils';
 
@@ -25,6 +25,11 @@ const BookCard = ({ card, onLike, onDislike, isWeb }) => {
       <Image source={{ uri: card.coverImageUrl }} style={styles.coverImage} />
       <Text style={styles.title} numberOfLines={2}>{card.title}</Text>
       <Text style={styles.author}>{card.author}</Text>
+      {card.summary && (
+        <ScrollView style={styles.summaryContainer} showsVerticalScrollIndicator={true}>
+          <Text style={styles.summary}>{card.summary}</Text>
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -46,6 +51,7 @@ const HomeScreen = () => {
             author: item.Item.author,
             coverImageUrl: item.Item.largeImageUrl.replace('?_ex=120x120', ''),
             isbn: item.Item.isbn,
+            summary: item.Item.itemCaption || '',
           }));
           setBooks(formattedBooks);
         } else {
@@ -76,6 +82,7 @@ const HomeScreen = () => {
           author: book.author,
           title: book.title,
           cover_image_url: book.coverImageUrl,
+          summary: book.summary || '',
         }),
       });
       
@@ -222,6 +229,20 @@ const styles = StyleSheet.create({
   author: {
     fontSize: 16,
     color: '#666666',
+    marginBottom: 10,
+  },
+  summaryContainer: {
+    flex: 1,
+    maxHeight: 120,
+    width: '90%',
+    marginTop: 10,
+    paddingHorizontal: 15,
+  },
+  summary: {
+    fontSize: 14,
+    color: '#333333',
+    lineHeight: 20,
+    textAlign: 'left',
   },
   webContainer: {
     flex: 1,
