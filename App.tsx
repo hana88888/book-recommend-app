@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import HomeScreen from './src/screens/HomeScreen';
 import FavoritesScreen from './src/screens/FavoritesScreen';
 import RecommendationsScreen from './src/screens/RecommendationsScreen';
+import DetailScreen from './src/screens/DetailScreen';
 
 const Stack = createStackNavigator();
 
@@ -49,6 +50,11 @@ const App = () => {
             name="Recommendations"
             options={{ title: 'おすすめ一覧' }}
             component={RecommendationsScreen}
+          />
+          <Stack.Screen
+            name="Detail"
+            options={{ title: '本の詳細' }}
+            component={DetailScreen}
           />
         </Stack.Navigator>
       </NavigationContainer>

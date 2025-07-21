@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { getUserId } from '../utils/userUtils';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -25,7 +27,14 @@ interface Book {
   summary?: string;
 }
 
+type RootStackParamList = {
+  Detail: { isbn: string };
+};
+
+type NavigationProp = StackNavigationProp<RootStackParamList>;
+
 const FavoritesScreen = () => {
+  const navigation = useNavigation<NavigationProp>();
   const [favorites, setFavorites] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -81,7 +90,10 @@ const FavoritesScreen = () => {
         data={favorites}
         keyExtractor={(item, index) => `${item.title}-${index}`}
         renderItem={({ item }) => (
-          <View style={styles.bookItem}>
+          <TouchableOpacity 
+            style={styles.bookItem}
+            onPress={() => navigation.navigate('Detail', { isbn: item.isbn })}
+          >
             <Image source={{ uri: item.largeImageUrl }} style={styles.coverImage} />
             <View style={styles.bookInfo}>
               <Text style={styles.title}>{item.title}</Text>
@@ -92,7 +104,7 @@ const FavoritesScreen = () => {
                 </ScrollView>
               )}
             </View>
-          </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
