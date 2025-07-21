@@ -57,6 +57,8 @@ const HomeScreen = () => {
           book_isbn: book.isbn,
           liked: liked,
           author: book.author,
+          title: book.title,
+          cover_image_url: book.coverImageUrl,
         }),
       });
       if (!response.ok) {
