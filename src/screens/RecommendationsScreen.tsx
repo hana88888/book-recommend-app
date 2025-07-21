@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, ActivityIndicator } from 'react-native';
-import Config from 'react-native-config';
 import { getUserId } from '../utils/userUtils';
 
-const BACKEND_URL = Config.BACKEND_URL;
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const RecommendationsScreen = () => {
   const [recommendations, setRecommendations] = useState([]);

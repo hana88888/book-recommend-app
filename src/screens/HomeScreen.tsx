@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, Image, ActivityIndicator } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
-import Config from 'react-native-config';
 import { getUserId } from '../utils/userUtils';
 
-const RAKUTEN_APP_ID = Config.RAKUTEN_APP_ID;
-const BACKEND_URL = Config.BACKEND_URL;
+const RAKUTEN_APP_ID = process.env.EXPO_PUBLIC_RAKUTEN_APP_ID;
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const BookCard = ({ card }) => (
   <View style={styles.card}>
